@@ -1,0 +1,121 @@
+# ===========================
+# Next.js
+# ===========================
+.next/
+out/
+build/
+dist/
+
+# ===========================
+# Node.js / npm
+# ===========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+package-lock.json
+
+# ===========================
+# Environment Variables (SECRETS - Never push these!)
+# ===========================
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env*.local
+
+# ===========================
+# TypeScript
+# ===========================
+*.tsbuildinfo
+next-env.d.ts
+
+# ===========================
+# Supabase
+# ===========================
+.supabase/
+supabase/.temp/
+supabase/config.toml
+
+# ===========================
+# OS Generated Files
+# ===========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ===========================
+# IDE & Editor Files
+# ===========================
+# VSCode
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# JetBrains (WebStorm, IntelliJ, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Vim/Neovim
+*.swp
+*.swo
+*.swn
+Session.vim
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ===========================
+# Logs & Debug
+# ===========================
+logs/
+*.log
+*.log.*
+lerna-debug.log*
+
+# ===========================
+# Testing & Coverage
+# ===========================
+coverage/
+.nyc_output/
+*.lcov
+.cache/
+
+# ===========================
+# Build & Compilation Artifacts
+# ===========================
+*.js.map
+*.css.map
+
+# ===========================
+# Miscellaneous
+# ===========================
+.vercel
+.netlify
+*.pem
+*.cert
+*.key
+tmp/
+temp/
