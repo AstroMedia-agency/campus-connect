@@ -3,22 +3,93 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  background: #F7F6F2;
-  color: #12151C;
+html {
+  background: #F6F7F4;
+}
+
+body {
+  color: #101418;
+  /* Soft mint glow top-left and warm glow top-right over the paper colour. */
+  background:
+    radial-gradient(1100px 600px at -10% -15%, #DDEFE6 0%, transparent 60%),
+    radial-gradient(900px 520px at 110% -5%, #F5EAD4 0%, transparent 55%),
+    #F6F7F4;
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: #2E6F5E;
-  color: #F7F6F2;
+  background: #1E7A62;
+  color: #F6F7F4;
+}
+
+@layer base {
+  /* Rounded buttons everywhere without touching every file. */
+  button {
+    border-radius: 0.65rem;
+  }
+}
+
+@layer components {
+  /* White rounded panel used for every section/box. */
+  .card {
+    @apply rounded-2xl border border-line bg-white/85 shadow-soft;
+    backdrop-filter: blur(6px);
+  }
+  /* Text inputs, selects, textareas. */
+  .field {
+    @apply rounded-lg border border-line bg-white outline-none transition focus:border-signal focus:ring-4 focus:ring-signal/15;
+  }
+  /* Small rounded tag (skills, members). */
+  .chip {
+    @apply rounded-full border border-line bg-mist/70 font-mono text-xs text-ink/80;
+  }
+  /* Main call-to-action buttons. */
+  .btn-accent {
+    background-image: linear-gradient(135deg, #1E7A62 0%, #2A9D7C 100%);
+    box-shadow: 0 8px 18px -10px rgba(30, 122, 98, 0.7);
+    transition: filter 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-accent:hover:not(:disabled) {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+  }
+  /* Slowly moving green-to-amber gradient text (used for names/headlines). */
+  .text-gradient {
+    background-image: linear-gradient(90deg, #1E7A62, #2FB38E, #E0A93B, #2FB38E, #1E7A62);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 8s linear infinite;
+  }
 }
 
 .node-pulse {
-  box-shadow: 0 0 0 0 rgba(46, 111, 94, 0.4);
+  box-shadow: 0 0 0 0 rgba(30, 122, 98, 0.4);
   animation: pulse 2s infinite;
 }
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(46, 111, 94, 0.35); }
-  70% { box-shadow: 0 0 0 8px rgba(46, 111, 94, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(46, 111, 94, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(30, 122, 98, 0.35); }
+  70% { box-shadow: 0 0 0 8px rgba(30, 122, 98, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(30, 122, 98, 0); }
+}
+@keyframes shimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+/* SVG shapes scale/pop from their own centre. */
+.origin-box {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Respect users who turn off animations in their phone/OS settings. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

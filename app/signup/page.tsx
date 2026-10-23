@@ -43,26 +43,27 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6">
-      <form onSubmit={handleSignup} className="max-w-sm w-full space-y-4">
+    <main className="min-h-screen flex items-center justify-center px-4 sm:px-6 py-10">
+      <form onSubmit={handleSignup} className="max-w-sm w-full space-y-4 card p-6 sm:p-8 shadow-lift animate-fade-up">
+        <a href="/" className="flex items-center gap-2 font-display font-700 mb-4"><span className="w-8 h-8 rounded-xl btn-accent text-paper text-sm flex items-center justify-center">CC</span>CampusConnect</a>
         <h1 className="font-display text-2xl font-700 mb-2">Create account</h1>
         {error && <p className="text-drift text-sm font-mono">{error}</p>}
 
         <input
-          className="w-full border border-line px-3 py-2 bg-transparent focus:border-signal outline-none"
+          className="w-full field px-3 py-2"
           placeholder="Full name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           required
         />
         <input
-          className="w-full border border-line px-3 py-2 bg-transparent focus:border-signal outline-none"
+          className="w-full field px-3 py-2"
           placeholder="Register number (optional)"
           value={regNo}
           onChange={(e) => setRegNo(e.target.value)}
         />
         <select
-          className="w-full border border-line px-3 py-2 bg-transparent focus:border-signal outline-none"
+          className="w-full field px-3 py-2"
           value={role}
           onChange={(e) => setRole(e.target.value as "student" | "faculty")}
         >
@@ -71,7 +72,7 @@ export default function SignupPage() {
         </select>
         <input
           type="email"
-          className="w-full border border-line px-3 py-2 bg-transparent focus:border-signal outline-none"
+          className="w-full field px-3 py-2"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -79,7 +80,7 @@ export default function SignupPage() {
         />
         <input
           type="password"
-          className="w-full border border-line px-3 py-2 bg-transparent focus:border-signal outline-none"
+          className="w-full field px-3 py-2"
           placeholder="Password (min 6 chars)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -88,7 +89,7 @@ export default function SignupPage() {
         />
         <button
           disabled={loading}
-          className="w-full bg-ink text-paper font-mono text-sm py-3 hover:bg-signal transition-colors disabled:opacity-50"
+          className="w-full btn-accent text-paper font-mono text-sm py-3 disabled:opacity-50"
         >
           {loading ? "Creating..." : "Sign up"}
         </button>

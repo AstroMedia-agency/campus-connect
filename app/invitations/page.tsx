@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Navbar from "@/components/Navbar";
+import PageLoader from "@/components/PageLoader";
 
 type Invitation = {
   id: string;
@@ -74,7 +75,7 @@ export default function InvitationsPage() {
     window.dispatchEvent(new Event("invitations-changed")); // refresh the navbar badge
   }
 
-  if (loading) return <div className="p-6 font-mono text-sm">Loading...</div>;
+  if (loading) return <PageLoader />;
 
   const pending = invites.filter((i) => i.status === "pending");
   const answered = invites.filter((i) => i.status !== "pending");
@@ -82,7 +83,7 @@ export default function InvitationsPage() {
   return (
     <main>
       <Navbar />
-      <div className="max-w-3xl mx-auto px-6 py-10">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10 animate-fade-up">
         <h1 className="font-display text-2xl font-700 mb-1">Invitations</h1>
         <p className="text-ink/60 mb-6 text-sm">
           Project invitations sent to you. Teams are formed only from students who accept.
@@ -101,11 +102,11 @@ export default function InvitationsPage() {
                 skills: {(inv.projects?.required_skills || []).join(", ") || "—"} · team size{" "}
                 {inv.projects?.team_size} · invited {new Date(inv.invited_at).toLocaleDateString()}
               </div>
-              <div className="flex gap-2 mt-3">
+              <div className="grid grid-cols-2 sm:flex gap-2 mt-3">
                 <button
                   onClick={() => respond(inv.id, "accept")}
                   disabled={busyId === inv.id}
-                  className="bg-signal text-paper font-mono text-xs px-4 py-2 disabled:opacity-50"
+                  className="btn-accent text-paper font-mono text-xs px-4 py-2 disabled:opacity-50"
                 >
                   {busyId === inv.id ? "..." : "Accept"}
                 </button>
@@ -125,7 +126,7 @@ export default function InvitationsPage() {
         <div className="space-y-2">
           {answered.length === 0 && <p className="font-mono text-xs text-ink/50">Nothing here yet.</p>}
           {answered.map((inv) => (
-            <div key={inv.id} className="border border-line p-3 flex items-center justify-between">
+            <div key={inv.id} className="card p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="font-medium">{inv.projects?.title}</div>
                 <div className="font-mono text-xs text-ink/50">

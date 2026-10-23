@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Navbar from "@/components/Navbar";
+import PageLoader from "@/components/PageLoader";
 
 type Project = { id: string; title: string; description: string; required_skills: string[]; team_size: number };
 type TeamRow = { id: string; name: string; github_repo: string | null };
@@ -389,23 +390,24 @@ export default function ProjectDetailPage() {
     { key: "done", label: "Done" },
   ];
 
-  if (!project) return <div className="p-6 font-mono text-sm">Loading...</div>;
+  if (!project) return <PageLoader />;
 
   return (
     <main>
       <Navbar />
-      <div className="max-w-5xl mx-auto px-6 py-10">
-        <h1 className="font-display text-2xl font-700 mb-1">{project.title}</h1>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 animate-fade-up">
+        <p className="font-mono text-xs uppercase tracking-widest text-signal mb-1">Project</p>
+        <h1 className="font-display text-2xl sm:text-3xl font-700 mb-1 break-words">{project.title}</h1>
         <p className="text-ink/60 mb-6">{project.description}</p>
 
         {/* Invite eligible candidates */}
-        <section className="border border-line p-5 mb-8">
-          <div className="flex items-center justify-between mb-1">
+        <section className="card p-4 sm:p-5 mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
             <h2 className="font-display font-600">Invite candidates</h2>
             <button
               onClick={handleSendInvites}
               disabled={inviting || selectedCandidates.length === 0}
-              className="bg-signal text-paper font-mono text-xs px-3 py-2 disabled:opacity-50"
+              className="btn-accent text-paper font-mono text-xs px-3 py-2 disabled:opacity-50"
             >
               {inviting ? "Sending..." : `Send invitations (${selectedCandidates.length})`}
             </button>
@@ -439,7 +441,7 @@ export default function ProjectDetailPage() {
               return (
                 <label
                   key={c.id}
-                  className={`flex items-center gap-3 border border-line px-3 py-2 ${
+                  className={`flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-line bg-white px-3 py-2 transition ${
                     locked ? "opacity-70" : "cursor-pointer hover:border-signal"
                   }`}
                 >
@@ -449,11 +451,11 @@ export default function ProjectDetailPage() {
                     checked={selectedCandidates.includes(c.id)}
                     onChange={() => toggleCandidate(c.id)}
                   />
-                  <span className="flex-1 text-sm">{c.full_name}</span>
+                  <span className="flex-1 min-w-[8rem] text-sm">{c.full_name}</span>
                   <span className="font-mono text-xs text-ink/50">
                     {(project.required_skills || []).map((s) => `${s}:${c.skills?.[s] || 0}`).join(" ")}
                   </span>
-                  {statusLabel && <span className={`font-mono text-xs w-44 text-right ${statusColor}`}>{statusLabel}</span>}
+                  {statusLabel && <span className={`font-mono text-xs w-full sm:w-44 pl-7 sm:pl-0 sm:text-right ${statusColor}`}>{statusLabel}</span>}
                 </label>
               );
             })}
@@ -461,14 +463,14 @@ export default function ProjectDetailPage() {
         </section>
 
         {/* Team formation */}
-        <section className="border border-line p-5 mb-8">
-          <div className="flex items-center justify-between mb-3">
+        <section className="card p-4 sm:p-5 mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <h2 className="font-display font-600">Teams</h2>
             <button
               onClick={handleFormTeams}
               disabled={formingTeams}
               title="Form teams right away from students who already accepted, without waiting for the rest"
-              className="bg-ink text-paper font-mono text-xs px-3 py-2 hover:bg-signal transition-colors disabled:opacity-50"
+              className="bg-ink text-paper shadow-soft font-mono text-xs px-3 py-2 hover:bg-signal transition-colors disabled:opacity-50"
             >
               {formingTeams ? "Forming..." : "Form teams now (accepted only)"}
             </button>
@@ -479,8 +481,8 @@ export default function ProjectDetailPage() {
               <button
                 key={t.id}
                 onClick={() => setSelectedTeam(t.id)}
-                className={`font-mono text-xs px-3 py-1.5 border ${
-                  selectedTeam === t.id ? "border-signal text-signal" : "border-line"
+                className={`font-mono text-xs px-3 py-1.5 border transition ${
+                  selectedTeam === t.id ? "border-signal bg-mist text-signal" : "border-line bg-white hover:border-signal/50"
                 }`}
               >
                 {t.name}
@@ -501,7 +503,7 @@ export default function ProjectDetailPage() {
               <h2 className="font-display font-600 mb-2">Members</h2>
               <div className="flex gap-2 flex-wrap">
                 {members.map((m) => (
-                  <span key={m.profile_id} className="font-mono text-xs border border-line px-2 py-1">
+                  <span key={m.profile_id} className="chip px-3 py-1">
                     {m.full_name}
                   </span>
                 ))}
@@ -509,11 +511,11 @@ export default function ProjectDetailPage() {
             </section>
 
             {/* Task creation */}
-            <section className="border border-line p-5 mb-8">
+            <section className="card p-4 sm:p-5 mb-8">
               <h2 className="font-display font-600 mb-3">Add task</h2>
-              <form onSubmit={handleCreateTask} className="grid grid-cols-2 gap-3 mb-3">
+              <form onSubmit={handleCreateTask} className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <input
-                  className="col-span-2 border border-line px-3 py-2 bg-transparent focus:border-signal outline-none"
+                  className="sm:col-span-2 field px-3 py-2"
                   placeholder="Task title"
                   value={taskTitle}
                   onChange={(e) => setTaskTitle(e.target.value)}
@@ -524,7 +526,7 @@ export default function ProjectDetailPage() {
                   <input
                     type="number"
                     min={1}
-                    className="w-full border border-line px-3 py-2 bg-transparent focus:border-signal outline-none"
+                    className="w-full field px-3 py-2"
                     value={taskDuration}
                     onChange={(e) => setTaskDuration(Number(e.target.value))}
                   />
@@ -532,7 +534,7 @@ export default function ProjectDetailPage() {
                 <div>
                   <label className="block font-mono text-xs text-ink/50 mb-1">Assign to</label>
                   <select
-                    className="w-full border border-line px-3 py-2 bg-transparent focus:border-signal outline-none"
+                    className="w-full field px-3 py-2"
                     value={taskAssignee}
                     onChange={(e) => setTaskAssignee(e.target.value)}
                   >
@@ -543,13 +545,13 @@ export default function ProjectDetailPage() {
                     ))}
                   </select>
                 </div>
-                <div className="col-span-2">
+                <div className="sm:col-span-2">
                   <label className="block font-mono text-xs text-ink/50 mb-1">
-                    Depends on (ctrl/cmd-click to select multiple)
+                    Depends on (ctrl/cmd-click on desktop, tap on phone, to pick several)
                   </label>
                   <select
                     multiple
-                    className="w-full border border-line px-3 py-2 bg-transparent focus:border-signal outline-none h-24"
+                    className="w-full field px-3 py-2 h-24"
                     value={taskDeps}
                     onChange={(e) =>
                       setTaskDeps(Array.from(e.target.selectedOptions).map((o) => o.value))
@@ -562,7 +564,7 @@ export default function ProjectDetailPage() {
                     ))}
                   </select>
                 </div>
-                <button className="col-span-2 bg-signal text-paper font-mono text-sm py-2">
+                <button className="sm:col-span-2 btn-accent text-paper font-mono text-sm py-2">
                   Add task
                 </button>
               </form>
@@ -570,15 +572,15 @@ export default function ProjectDetailPage() {
 
             {/* Kanban board with DAG info */}
             <section className="mb-8">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <h2 className="font-display font-600">Task board</h2>
                 <span className="font-mono text-xs text-ink/50">
                   critical path: {totalDays} day{totalDays !== 1 ? "s" : ""}
                 </span>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {columns.map((col) => (
-                  <div key={col.key} className="border border-line p-3 min-h-[120px]">
+                  <div key={col.key} className="rounded-2xl border border-line bg-mist/50 p-3 min-h-[120px]">
                     <h3 className="font-mono text-xs uppercase tracking-wide text-ink/50 mb-2">
                       {col.label}
                     </h3>
@@ -591,12 +593,12 @@ export default function ProjectDetailPage() {
                           return (
                             <div
                               key={t.id}
-                              className={`border p-2 text-sm ${
+                              className={`rounded-xl border p-3 text-sm shadow-soft transition hover:shadow-lift ${
                                 isDrifted
-                                  ? "border-drift bg-drift/5"
+                                  ? "border-drift/60 bg-[#FBEFEA]"
                                   : isCritical
-                                  ? "border-signal"
-                                  : "border-line"
+                                  ? "border-signal/60 bg-white"
+                                  : "border-line bg-white"
                               }`}
                             >
                               <div className="font-medium">{t.title}</div>
@@ -611,7 +613,7 @@ export default function ProjectDetailPage() {
                               <select
                                 value={t.status}
                                 onChange={(e) => handleStatusChange(t.id, e.target.value)}
-                                className="mt-2 w-full font-mono text-xs border border-line bg-transparent"
+                                className="mt-2 w-full field font-mono text-xs px-2 py-1"
                               >
                                 <option value="todo">To do</option>
                                 <option value="in_progress">In progress</option>
@@ -627,8 +629,8 @@ export default function ProjectDetailPage() {
             </section>
 
             {/* GitHub commit telemetry */}
-            <section className="border border-line p-5 mb-8">
-              <div className="flex items-center justify-between mb-1">
+            <section className="card p-4 sm:p-5 mb-8">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <h2 className="font-display font-600">GitHub commit telemetry</h2>
                 <span className="font-mono text-xs text-ink/50 node-pulse rounded-full px-2">
                   {activityCount} logged session{activityCount !== 1 ? "s" : ""} · live
@@ -639,9 +641,9 @@ export default function ProjectDetailPage() {
                 by matching usernames become real activity log entries automatically.
                 {githubRepo.trim() && " Auto-checks every 90s while this page stays open."}
               </p>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
-                  className="flex-1 border border-line px-3 py-2 bg-transparent focus:border-signal outline-none font-mono text-sm"
+                  className="flex-1 min-w-0 field px-3 py-2 font-mono text-sm"
                   placeholder="owner/repo (e.g. octocat/Hello-World)"
                   value={githubRepo}
                   onChange={(e) => setGithubRepo(e.target.value)}
@@ -649,7 +651,7 @@ export default function ProjectDetailPage() {
                 <button
                   onClick={() => handleGithubSync(false)}
                   disabled={syncing}
-                  className="bg-ink text-paper font-mono text-xs px-4 hover:bg-signal transition-colors disabled:opacity-50 whitespace-nowrap"
+                  className="bg-ink text-paper shadow-soft font-mono text-xs px-4 py-2 hover:bg-signal transition-colors disabled:opacity-50 whitespace-nowrap"
                 >
                   {syncing ? "Syncing..." : "Sync commits"}
                 </button>
@@ -661,13 +663,13 @@ export default function ProjectDetailPage() {
             </section>
 
             {/* Email drift reminders */}
-            <section className="border border-line p-5 mb-8">
-              <div className="flex items-center justify-between mb-1">
+            <section className="card p-4 sm:p-5 mb-8">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <h2 className="font-display font-600">Email deadline reminders</h2>
                 <button
                   onClick={handleSendReminders}
                   disabled={reminding}
-                  className="bg-ink text-paper font-mono text-xs px-3 py-2 hover:bg-signal transition-colors disabled:opacity-50"
+                  className="bg-ink text-paper shadow-soft font-mono text-xs px-3 py-2 hover:bg-signal transition-colors disabled:opacity-50"
                 >
                   {reminding ? "Sending..." : "Send reminders now"}
                 </button>
@@ -681,14 +683,14 @@ export default function ProjectDetailPage() {
             </section>
 
             {/* Activity log */}
-            <section className="border border-line p-5 mb-8">
+            <section className="card p-4 sm:p-5 mb-8">
               <h2 className="font-display font-600 mb-3">Log activity manually</h2>
               <p className="text-xs text-ink/50 mb-3 font-mono">
                 For work that doesn't show up as commits (research, design, planning).
               </p>
-              <form onSubmit={handleLogActivity} className="grid grid-cols-3 gap-3">
+              <form onSubmit={handleLogActivity} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <select
-                  className="border border-line px-3 py-2 bg-transparent focus:border-signal outline-none"
+                  className="field px-3 py-2"
                   value={logProfile}
                   onChange={(e) => setLogProfile(e.target.value)}
                 >
@@ -701,37 +703,37 @@ export default function ProjectDetailPage() {
                 <input
                   type="number"
                   min={1}
-                  className="border border-line px-3 py-2 bg-transparent focus:border-signal outline-none"
+                  className="field px-3 py-2"
                   placeholder="Minutes active"
                   value={logMinutes}
                   onChange={(e) => setLogMinutes(Number(e.target.value))}
                 />
                 <input
-                  className="border border-line px-3 py-2 bg-transparent focus:border-signal outline-none"
+                  className="field px-3 py-2"
                   placeholder="What did you work on?"
                   value={logDesc}
                   onChange={(e) => setLogDesc(e.target.value)}
                 />
-                <button className="col-span-3 bg-ink text-paper font-mono text-sm py-2 hover:bg-signal transition-colors">
+                <button className="sm:col-span-3 bg-ink text-paper shadow-soft font-mono text-sm py-2 hover:bg-signal transition-colors">
                   Log session
                 </button>
               </form>
             </section>
 
             {/* Report */}
-            <section className="border border-line p-5 mb-16">
-              <div className="flex items-center justify-between mb-3">
+            <section className="card p-4 sm:p-5 mb-16">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <h2 className="font-display font-600">Contribution report</h2>
                 <button
                   onClick={handleGenerateReport}
                   disabled={generatingReport}
-                  className="bg-ink text-paper font-mono text-xs px-3 py-2 hover:bg-signal transition-colors disabled:opacity-50"
+                  className="bg-ink text-paper shadow-soft font-mono text-xs px-3 py-2 hover:bg-signal transition-colors disabled:opacity-50"
                 >
                   {generatingReport ? "Generating..." : "Generate report"}
                 </button>
               </div>
               {report && (
-                <pre className="whitespace-pre-wrap font-mono text-sm bg-ink/[0.03] p-4 border border-line">
+                <pre className="whitespace-pre-wrap break-words font-mono text-xs sm:text-sm bg-mist/40 p-3 sm:p-4 border border-line rounded-xl">
                   {report}
                 </pre>
               )}
