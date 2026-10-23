@@ -141,6 +141,22 @@ If you later deploy this (outside the scope of "no deployment," but worth knowin
 
 ---
 
+## Project invitations (accept before team formation)
+
+Team formation no longer picks every eligible student automatically. Instead:
+
+1. On a project page, **Invite candidates** lists eligible students (attendance ≥ 70%, no backlogs). Tick the ones you want and click **Send invitations**.
+2. Each selected student gets an **email** (via the same Gmail setup as reminders) and an **in-app notification**: an **Invitations** link in the nav bar with a count badge.
+3. The student opens **Invitations** and clicks **Accept** or **Decline**.
+4. When every invited student has replied, teams are **formed automatically** from the students who accepted, using the same balancing algorithm, and appear on the project page live.
+5. Don't want to wait for someone who never replies? Click **Form teams now (accepted only)**.
+
+One-time setup: run `supabase/migration_5_project_invitations.sql` in the Supabase SQL Editor. Fresh installs get it from `schema.sql`.
+
+Optional: after deploying, set `APP_URL=https://your-domain` in `.env.local` so the email link points to the live site (otherwise it uses the address the app is running on, e.g. http://localhost:3000).
+
+---
+
 ## 6. Project structure
 
 ```

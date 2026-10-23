@@ -8,6 +8,14 @@ import Navbar from "@/components/Navbar";
 type Project = { id: string; title: string; description: string; required_skills: string[]; team_size: number };
 type TeamRow = { id: string; name: string; github_repo: string | null };
 type Member = { profile_id: string; full_name: string };
+type Candidate = { id: string; full_name: string; skills: Record<string, number>; attendance_pct: number };
+type Invitation = {
+  id: string;
+  profile_id: string;
+  status: "pending" | "accepted" | "declined";
+  team_id: string | null;
+  teams: { name: string } | null;
+};
 type Task = {
   id: string;
   title: string;
@@ -55,6 +63,12 @@ export default function ProjectDetailPage() {
   const [remindMsg, setRemindMsg] = useState<string | null>(null);
   const [reminding, setReminding] = useState(false);
 
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
+  const [inviting, setInviting] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState<string | null>(null);
+
   useEffect(() => {
     async function init() {
       const { data: session } = await supabase.auth.getSession();
@@ -64,8 +78,29 @@ export default function ProjectDetailPage() {
       }
       await loadProject();
       await loadTeams();
+      await loadCandidates();
+      await loadInvitations();
     }
     init();
+  }, [projectId]);
+
+  // Live: when a student accepts/declines (or gets placed in a team), refresh
+  // the invitation list and the team list on this page — no refresh needed.
+  useEffect(() => {
+    const channel = supabase
+      .channel(`project-invites-${projectId}-${Math.random().toString(36).slice(2)}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "project_invitations", filter: `project_id=eq.${projectId}` },
+        () => {
+          loadInvitations();
+          loadTeams();
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [projectId]);
 
   useEffect(() => {
@@ -177,8 +212,57 @@ export default function ProjectDetailPage() {
       setTeamFormationMsg(data.error);
       return;
     }
-    setTeamFormationMsg(`Formed ${data.teams.length} team(s).`);
+    setTeamFormationMsg(`Formed ${data.teams.length} team(s) from accepted candidates.`);
     await loadTeams();
+    await loadInvitations();
+  }
+
+  async function loadCandidates() {
+    // Same eligibility rule as before: attendance >= 70% and no backlogs.
+    const res = await fetch("/api/students");
+    const data = await res.json();
+    setCandidates(data.students || []);
+  }
+
+  async function loadInvitations() {
+    const res = await fetch(`/api/invitations?projectId=${projectId}`);
+    const data = await res.json();
+    setInvitations(data.invitations || []);
+  }
+
+  function toggleCandidate(id: string) {
+    setSelectedCandidates((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  async function handleSendInvites() {
+    if (selectedCandidates.length === 0) return;
+    setInviting(true);
+    setInviteMsg(null);
+    const { data: session } = await supabase.auth.getSession();
+    const res = await fetch("/api/invitations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.session?.access_token}`,
+      },
+      body: JSON.stringify({ projectId, profileIds: selectedCandidates }),
+    });
+    const data = await res.json();
+    setInviting(false);
+    if (data.error) {
+      setInviteMsg(data.error);
+      return;
+    }
+    if (data.invited === 0) {
+      setInviteMsg(data.message);
+    } else {
+      setInviteMsg(
+        `Invited ${data.invited} candidate(s); ${data.emailed} email(s) sent.` +
+          (data.errors?.length ? ` Email problems: ${data.errors.join("; ")}` : "")
+      );
+    }
+    setSelectedCandidates([]);
+    await loadInvitations();
   }
 
   async function handleCreateTask(e: React.FormEvent) {
@@ -314,6 +398,68 @@ export default function ProjectDetailPage() {
         <h1 className="font-display text-2xl font-700 mb-1">{project.title}</h1>
         <p className="text-ink/60 mb-6">{project.description}</p>
 
+        {/* Invite eligible candidates */}
+        <section className="border border-line p-5 mb-8">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="font-display font-600">Invite candidates</h2>
+            <button
+              onClick={handleSendInvites}
+              disabled={inviting || selectedCandidates.length === 0}
+              className="bg-signal text-paper font-mono text-xs px-3 py-2 disabled:opacity-50"
+            >
+              {inviting ? "Sending..." : `Send invitations (${selectedCandidates.length})`}
+            </button>
+          </div>
+          <p className="font-mono text-xs text-ink/50 mb-3">
+            Select eligible students (attendance ≥ 70%, no backlogs). Each gets an email and an in-app
+            invitation. Teams form automatically from those who accept, once everyone invited has replied.
+          </p>
+          {inviteMsg && <p className="font-mono text-xs text-signal mb-3">{inviteMsg}</p>}
+          <div className="font-mono text-xs text-ink/60 mb-3">
+            {invitations.filter((i) => i.status === "pending").length} pending ·{" "}
+            {invitations.filter((i) => i.status === "accepted").length} accepted ·{" "}
+            {invitations.filter((i) => i.status === "declined").length} declined
+          </div>
+          <div className="space-y-1 max-h-72 overflow-y-auto">
+            {candidates.length === 0 && (
+              <p className="font-mono text-xs text-ink/50">No eligible students found.</p>
+            )}
+            {candidates.map((c) => {
+              const inv = invitations.find((i) => i.profile_id === c.id);
+              const locked = inv && inv.status !== "declined"; // pending or accepted: can't re-invite
+              const statusLabel = !inv
+                ? null
+                : inv.status === "accepted"
+                ? inv.teams
+                  ? `accepted · ${inv.teams.name}`
+                  : "accepted · waiting for team"
+                : inv.status;
+              const statusColor =
+                inv?.status === "accepted" ? "text-signal" : inv?.status === "declined" ? "text-drift" : "text-ink/50";
+              return (
+                <label
+                  key={c.id}
+                  className={`flex items-center gap-3 border border-line px-3 py-2 ${
+                    locked ? "opacity-70" : "cursor-pointer hover:border-signal"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    disabled={!!locked}
+                    checked={selectedCandidates.includes(c.id)}
+                    onChange={() => toggleCandidate(c.id)}
+                  />
+                  <span className="flex-1 text-sm">{c.full_name}</span>
+                  <span className="font-mono text-xs text-ink/50">
+                    {(project.required_skills || []).map((s) => `${s}:${c.skills?.[s] || 0}`).join(" ")}
+                  </span>
+                  {statusLabel && <span className={`font-mono text-xs w-44 text-right ${statusColor}`}>{statusLabel}</span>}
+                </label>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Team formation */}
         <section className="border border-line p-5 mb-8">
           <div className="flex items-center justify-between mb-3">
@@ -321,9 +467,10 @@ export default function ProjectDetailPage() {
             <button
               onClick={handleFormTeams}
               disabled={formingTeams}
+              title="Form teams right away from students who already accepted, without waiting for the rest"
               className="bg-ink text-paper font-mono text-xs px-3 py-2 hover:bg-signal transition-colors disabled:opacity-50"
             >
-              {formingTeams ? "Forming..." : "Run team formation"}
+              {formingTeams ? "Forming..." : "Form teams now (accepted only)"}
             </button>
           </div>
           {teamFormationMsg && <p className="font-mono text-xs text-signal mb-3">{teamFormationMsg}</p>}
@@ -341,7 +488,7 @@ export default function ProjectDetailPage() {
             ))}
             {teams.length === 0 && (
               <p className="text-ink/50 font-mono text-xs">
-                No teams yet — run team formation to auto-assign students by skill.
+                No teams yet — invite candidates above. Teams appear here automatically once they accept.
               </p>
             )}
           </div>
